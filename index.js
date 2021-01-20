@@ -1,48 +1,70 @@
 const puppeteer = require('puppeteer');
 
-async function search(word) {
+async function google(word, pages = 10) {
 
-  let step = 0;
   let domains = new Set();
-  let pagination = new Set();
+  let pagination = 0;
+  let suggestions;
+
+  const args = [
+    "--disable-infobars",
+    "--disable-dev-shm-usage",
+    "--disable-setuid-sandbox",
+    "--disable-accelerated-2d-canvas",
+    "--disable-gpu",
+    "--no-sandbox",
+    "--lang=pl-PL,pl"
+  ];
+
+  const browser = await puppeteer.launch({
+      headless: true,
+      devtools: false,
+      ignoreHTTPSErrors: true,
+      args,
+      ignoreDefaultArgs: ["--disable-extensions"],
+    });
 
   do {
 
-    // start new browser instance
-
-    const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
-    await page.goto(`https://www.google.pl/search?q=${word}&filter=0&num=100&start=${step}00`);
+    try {
 
-    // get pagination
+      await page.goto(`https://www.google.pl/search?q=${word}&filter=0&num=100&start=${pagination}00&hl=pl`, {
+        waitUntil: "networkidle0",
+        timeout: 15000,
+      });
 
-    const navigation = await page.$$eval("div[role='navigation'] tr[jsname] a", (pagination) => pagination.map((nextPage) => nextPage.href));
+      if (!pagination) {
+        suggestions = await page.$$eval("div#botstuff a", (similar) => similar.map((link) => link.textContent));
+      }
 
-    navigation.map(nextPage => pagination.add(nextPage));
+      const results = await page.$$eval("div.g div div > a", (nodes) => nodes.map((node) => node.href));
+      console.log(results);
 
-    // get domains
+      results.forEach(domain => domains.add(domain.match(/^https?\:\/\/(?:www\.)?([^\/?#]+)(?:[\/?#]|$)/i)[1]));
+      console.log(domains);
 
-    const results = await page.$$eval("div.g div div > a", (domains) => domains.map((domain) => domain.href));
+    } catch (err) {
 
-    results.map(domain => domains.add(domain.match(/^https?\:\/\/(?:www\.)?([^\/?#]+)(?:[\/?#]|$)/i)[1]));
+      console.log(`Something go bad: ${err}`);
 
-    // get next page
+    }
 
-    console.log(`Search ${word} - page ${step}`);
+    // go next page
 
-    step++;
+    pagination++;
 
-    // close browser instance
+    console.log(`Google Search: ${word} - page ${pagination}`);
 
-    await browser.close();
+  } while (pagination < pages);
 
-  } while (step <= pagination.size);
+  await browser.close();
 
-  return domains;
+  return { word, domains, suggestions };
 
 };
 
-const words = [`telewizor`];
+const words = [`laptop`];
 
-words.map(word => search(word).then((result) => console.log(result)));
+words.map(word => google(word, 2).then((data) => console.log(data)));
