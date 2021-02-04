@@ -13,6 +13,7 @@ const words = [`słuchawki`];
 //   })
 // );
 
-const urls = ['https://e-zabawkowo.pl', 'https://krainazabawy.pl'];
+const urls = ['wordpress-demo.jarekbaran.dev', 'woocommerce-demo.jarekbaran.dev', 'prestashop-demo.jarekbaran.dev', 'devshop-707702.shoparena.pl'];
 
-analyzer(urls);
+analyzer(urls)
+  .then((data) => data.forEach((domain) => console.log(domain)));
