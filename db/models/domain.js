@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const Domain = mongoose.model("Domain", {
-  host: String,
-  tech: String,
+  domain: String,
+  stack: String,
   word: String,
 });
 

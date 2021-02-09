@@ -10,8 +10,8 @@ mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${
 });
 
 const addDomain = new Domain({
-  host: "test.com",
-  tech: "testowy",
+  domain: "test.com",
+  stack: "testowy",
   word: "testowe",
 });
 
