@@ -1,29 +1,35 @@
 const google = require("./lib/google");
 const analyzer = require("./lib/analyzer");
+const addDomain = require("./lib/mongoose");
 
 const ecFinder = (words) => {
   words.map(word => google(word, 2, 30)
     .then((data) => {
+
+      console.log(`*** Wyszukiwanie *** \n`);
+
       console.log(`Dla frazy: ${data.word} \n`);
       console.log(`Sugestie: ${data.suggestions} \n`);
-      console.log(`Domeny: ${data.domains.size} \n`);
+      console.log(`Znalezionych domen: ${data.domains.size} \n`);
 
-      data.domains.forEach((domain) => console.log(domain));
-
-      console.log(`\n Analyzer START \n`);
+      console.log(`*** Start analizy *** \n`);
 
       analyzer(data.domains)
-        .then((data) => data.forEach((domain) => console.log(domain)));
+      .then((data) => {
+        data.forEach((domain) => {
+          addDomain({ ...domain, word })
+        })
+      });
+
     })
   )
 }
 
-
 /// Test ecFinder
 
-const search = [`meble dla dzieci 3-6 lat`];
+const search = [`rolety materiałowe`];
 
-// ecFinder(search);
+ecFinder(search);
 
 /// Test analyzer
 
@@ -34,5 +40,11 @@ domains = [
   'devshop-707702.shoparena.pl',
 ];
 
-analyzer(domains)
-  .then((data) => data.forEach((domain) => console.log(domain)));
+// const word = search[0];
+
+// analyzer(domains)
+//   .then((data) => {
+//     data.forEach((domain) => {
+//       addDomain({ ...domain, word })
+//     })
+//   });
